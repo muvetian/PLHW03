@@ -1,0 +1,58 @@
+#!/usr/bin/perl
+use warnings;
+sub create_deck {
+for ($i=0; $i < 4; $i++) {
+  for($j=2; $j <= 10; $j++){
+    @deck[$index] = $j;
+    $index ++;
+  }
+  for($k=0; $k < 3; $k++){
+    @deck[$index] = 10;
+    $index++;
+  }
+    @deck[$index] = 11;
+    $index++;
+
+}
+  
+}
+
+@time = localtime();
+$time_string = localtime();
+
+$starting_balance =$time[3] * 10 + $time[1];
+print "starting balance is $starting_balance\n";
+
+$line_credit = $time[0];
+print "the line of credit is $line_credit\n";
+print "The current time is: $time_string\n";
+
+
+print "Please enter the random seed for the game: ";
+$seed = <STDIN>;
+chomp $seed;
+exit 0 if ($seed eq "");
+print "the random seed is $seed\n";
+
+srand($seed);
+$index = 0;
+for ($i=0; $i < 4; $i++) {
+  for($j=2; $j <= 10; $j++){
+    @deck[$index] = $j;
+    $index ++;
+  }
+  for($k=0; $k < 3; $k++){
+    @deck[$index] = 10;
+    $index++;
+  }
+    @deck[$index] = 11;
+    $index++;
+
+}
+for ($i=51;$i>=0;$i--){
+  $j = rand($i);
+  $temp = @deck[$i];
+  @deck[$i] = @deck[$j];
+  @deck[$j] = $temp;
+}
+print "the deck after shuffle is: @deck";
