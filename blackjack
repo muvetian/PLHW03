@@ -1,34 +1,55 @@
 #!/usr/bin/perl
 use warnings;
 sub create_deck {
-for ($i=0; $i < 4; $i++) {
-  for($j=2; $j <= 10; $j++){
-    @deck[$index] = $j;
-    $index ++;
-  }
-  for($k=0; $k < 3; $k++){
-    @deck[$index] = 10;
-    $index++;
-  }
-    @deck[$index] = 11;
+	for ($i=0; $i < 4; $i++) {
+  	for($j=2; $j <= 10; $j++){
+    	$deck[$index] = $j;
+    	$index ++;
+  	}
+    for($k=11; $k<=13; $k++){
+      print "k is $k while index is $index";
+    	if($k == 11){
+      	$deck[$index] = "J";
+      }
+      elsif($k == 12){
+      	$deck[$index] = "Q";
+      }
+      else{
+      	$deck[$index] = "K";
+      }
+      $index++;
+    }
+
+    $deck[$index] = "A";
     $index++;
 
+	}
+  return @deck;
 }
-  
+sub shuffle_deck{
+  @deck = @_;
+  $size = @deck;
+  print "the size is: $size\n";
+  for ($i= $size;$i>=0;$i--){
+  	$j = rand($i);
+  	$temp = $deck[$i];
+  	$deck[$i] = $deck[$j];
+  	$deck[$j] = $temp;
+	}
+  return @deck;
 }
-
 @time = localtime();
 $time_string = localtime();
 
-$starting_balance =$time[3] * 10 + $time[1];
-print "starting balance is $starting_balance\n";
+$balance =$time[3] * 10 + $time[1];
+print "starting balance is $balance\n";
 
 $line_credit = $time[0];
 print "the line of credit is $line_credit\n";
 print "The current time is: $time_string\n";
 
 
-print "Please enter the random seed for the game: ";
+print "Now seed for the game: ";
 $seed = <STDIN>;
 chomp $seed;
 exit 0 if ($seed eq "");
@@ -36,23 +57,29 @@ print "the random seed is $seed\n";
 
 srand($seed);
 $index = 0;
-for ($i=0; $i < 4; $i++) {
-  for($j=2; $j <= 10; $j++){
-    @deck[$index] = $j;
-    $index ++;
-  }
-  for($k=0; $k < 3; $k++){
-    @deck[$index] = 10;
-    $index++;
-  }
-    @deck[$index] = 11;
-    $index++;
+# create the deck
+@deck = create_deck;
+$dealing_index = 0;
+# shuffle the deck
+print "deck before shuffle: @deck";
+@shuffled_deck = shuffle_deck(@deck);
 
+$quit = 0;
+while($quit != 1){
+	print("How much would like to bet?: ");
+  $bet_amount = <STDIN>;
+  if ($bet_amount > $balance + $line_credit){
+  	print ("Sorry bro, you are broke.\n");
+    last;
+  }
+  print("Would you like to continue playing?(Y/N): ");
+  $if_quit = <STDIN>;
+  if($if_quit == 'Y'){
+  	$quit = 1;
+  }
+  elsif($if_quit == 'N'){
+
+  }
 }
-for ($i=51;$i>=0;$i--){
-  $j = rand($i);
-  $temp = @deck[$i];
-  @deck[$i] = @deck[$j];
-  @deck[$j] = $temp;
-}
-print "the deck after shuffle is: @deck";
+
+#print "the deck after shuffle is: @shuffled_deck";
