@@ -1,5 +1,138 @@
 #!/usr/bin/perl
 use warnings;
+# print the player hand
+sub print_player_deck{
+	@player_deck = @_;
+	$size = @player_deck;
+	$player_hand = "Player's Current Hand:";
+
+	@possible_values = (0);
+	for($i = 0; $i < $size; $i++){
+		$player_hand = $player_hand." ";
+		$player_hand = $player_hand.$player_deck[$i];
+		$possible_size = @possible_values;
+		if($player_deck[$i] eq 'A'){
+			for($j = 0; $j < $possible_size; $j++){
+				$temp = $possible_values[$j];
+
+				# Checking if new value needs to be created if A is used as 11
+				$if_newvalue = 1;
+				for($k = 0; $k < $possible_values; $k++){
+					if($possible_values[$j] + 11 == $possible_values[$k]){
+						$if_newvalue = 0;
+					}
+				}
+
+				#if if_newvalue is 1, we have to push the new value to the possible values array
+				if($if_newvalue == 1){
+					$value_topush = $temp + 11;
+					push(@possible_values, $value_topush);
+				}
+
+				# The default value is 1 for A
+				@possible_values[$j] = $temp + 1;
+			}
+		}
+		else{
+			for($l = 0; $l < $possible_size; $l++){
+				$possible_values[$l] = $possible_values[$l] + $face_value_of{$player_deck[$i]};
+			}
+		}
+
+	}
+	$possible_size_after = @possible_values;
+	$possible_value_string = "";
+	# Filter out the possible values that are over 21
+	for($i = 0; $i < $possible_size_after; $i++){
+		if($possible_values[$i] > 21){
+			@possible_values = splice(@possible_values,$i);
+		}
+	}
+	# Form the string inside of the parentheses
+	for ($i = 0; $i < $possible_size_after; $i++){
+		if($i == 0){
+			$possible_value_string = $possible_value_string."$possible_values[$i]";
+		}
+		else{
+			$possible_value_string = $possible_value_string." $possible_values[$i]"
+		}
+	}
+
+	#print the final string
+	print "$player_hand ($possible_value_string)\n";
+}
+# print the dealer hand
+sub print_dealer_deck{
+	@dealer_deck = @_;
+	$size = @dealer_deck;
+	$dealer_hand = "Dealer's Current Hand:";
+	@possible_values = (0);
+	for($i = 0; $i < $size; $i++){
+		if($i == 0){
+			$dealer_hand = $dealer_hand." ";
+			$dealer_hand = $dealer_hand.$dealer_deck[0];
+		}
+		else{
+			$dealer_hand = $dealer_hand." ?";
+		}
+		$possible_size = @possible_values;
+		if($dealer_deck[$i] eq 'A'){
+			for($j = 0; $j < $possible_size; $j++){
+				$temp = $possible_values[$j];
+
+				# Checking if new value needs to be created if A is used as 11
+				$if_newvalue = 1;
+				for($k = 0; $k < $possible_size; $k++){
+					if($possible_values[$j] + 11 == $possible_values[$k]){
+						$if_newvalue = 0;
+					}
+				}
+
+				#if if_newvalue is 1, we have to push the new value to the possible values array
+				if($if_newvalue == 1){
+					$value_topush = $temp + 11;
+					push(@possible_values, $value_topush);
+				}
+
+				# The default value is 1 for A
+				@possible_values[$j] = $temp + 1;
+			}
+		}
+		else{
+
+			for($l = 0; $l < $possible_size; $l++){
+
+				$possible_values[$l] = $possible_values[$l] + $face_value_of{$dealer_deck[$i]};
+			}
+		}
+
+	}
+	$possible_size_after = @possible_values;
+	$possible_value_string = "";
+
+	# Filter out the possible values that are over 21
+	for($i = 0; $i < $possible_size_after; $i++){
+		if($possible_values[$i] > 21){
+			@possible_values = splice(@possible_values,$i);
+		}
+	}
+
+	# Form the string that will be inside of the parentheses
+	for ($i = 0; $i < $possible_size_after; $i++){
+		if($i == 0){
+			$possible_value_string = $possible_value_string."$possible_values[$i]";
+		}
+		else{
+			$possible_value_string = $possible_value_string." $possible_values[$i]";
+		}
+	}
+
+
+
+	print "$dealer_hand ($possible_value_string)\n";
+
+}
+# create a deck
 sub create_deck {
 	for ($i=0; $i < 4; $i++) {
   	for($j=2; $j <= 10; $j++){
@@ -7,7 +140,7 @@ sub create_deck {
     	$index ++;
   	}
     for($k=11; $k<=13; $k++){
-      print "k is $k while index is $index";
+
     	if($k == 11){
       	$deck[$index] = "J";
       }
@@ -26,6 +159,7 @@ sub create_deck {
 	}
   return @deck;
 }
+# shuffle a deck
 sub shuffle_deck{
   @deck = @_;
   $size = @deck;
@@ -57,29 +191,116 @@ print "the random seed is $seed\n";
 
 srand($seed);
 $index = 0;
+# create the hash table
+%face_value_of = (
+    "1"  => 1,
+    "2" => 2,
+    "3"  => 3,
+		"4" => 4,
+		"5"  => 5,
+    "6" => 6,
+    "7"  => 7,
+		"8" => 8,
+		"9" => 9,
+		"10" => 10,
+		"J" => 10,
+		"Q" => 10,
+		"K" => 10,
+);
+
 # create the deck
 @deck = create_deck;
-$dealing_index = 0;
-# shuffle the deck
-print "deck before shuffle: @deck";
-@shuffled_deck = shuffle_deck(@deck);
 
+
+# shuffle the deck
+@shuffled_deck = ();
+@player_deck = ();
+@dealer_deck = ();
+$round = 0;
 $quit = 0;
 while($quit != 1){
-	print("How much would like to bet?: ");
-  $bet_amount = <STDIN>;
-  if ($bet_amount > $balance + $line_credit){
-  	print ("Sorry bro, you are broke.\n");
-    last;
-  }
-  print("Would you like to continue playing?(Y/N): ");
-  $if_quit = <STDIN>;
-  if($if_quit == 'Y'){
-  	$quit = 1;
-  }
-  elsif($if_quit == 'N'){
+	$hit_or_stay = 0;
+	if($round == 0){
+		$round = 1;
+		@shuffled_deck = shuffle_deck(@deck);
 
-  }
+		print("Hi there, welcome to the game of black jack!! The game where you think you would walk out of here hands full. But I assure you, you won't. Now time to waste both your money and your time.Whoo hoo!!!\n\n");
+		print("But first of all, how much would like to lose?: ");
+		$bet_amount = <STDIN>;
+		if ($bet_amount <= 0){
+			print ("Nice try.");
+			last;
+		}
+		$bet_amount_rounded = int($bet_amount + 0.5);
+
+		if ($bet_amount_rounded > $balance + $line_credit){
+			print ("Sorry bro, you are broke.\n");
+			last;
+		}
+		if ($bet_amount_rounded >= 200){
+			print ("Going big huh? Just like they say go big or go home. Oh sorry, I just realize that you won't have a home after playing.\n");
+		}
+		print ("The rounded bet_amount is: $bet_amount_rounded\n");
+
+		# Pop the two initial deals from the deck
+
+
+
+
+		# Dealering two cards to the player
+		$dealer_deal = pop(@shuffled_deck);
+		push(@dealer_deck,$dealer_deal);
+		$dealer_deal = pop(@shuffled_deck);
+		push(@dealer_deck,$dealer_deal);
+
+		# Dealing two cards to the player
+		$player_deal = pop(@shuffled_deck);
+		push(@player_deck,$player_deal);
+		$player_deal = pop(@shuffled_deck);
+		push(@player_deck,$player_deal);
+
+		print "right now the player deck is: @player_deck\n";
+		print "right now the dealer deck is: @dealer_deck\n";
+		# printing the current hands of both the dealer and the player
+		print_dealer_deck(@dealer_deck);
+		print_player_deck(@player_deck);
+
+
+
+	}
+	else{
+		print("Hit or Stay?(H/S): ");
+		$input = <STDIN>;
+		if($input eq 'H' || $input eq 'h'){
+			$hit_or_stay = 0;
+		}
+		elsif($input eq 'S' || $input eq 's'){
+			$hit_or_stay = 1;
+		}
+		if($hit_or_stay == 0){
+
+		}
+
+
+
+	}
+
+
+
+
+
+
+
+	 #
+	 # print("Would you like to continue playing?(Y/N): ");
+	 # $if_quit = <STDIN>;
+	 # if($if_quit eq 'Y'){
+	 #  $quit = 1;
+	 # }
+	 # elsif($if_quit eq 'N'){
+		# $quit = 0;
+	 # }
+
 }
 
 #print "the deck after shuffle is: @shuffled_deck";
