@@ -1,31 +1,43 @@
 #!/usr/bin/perl
 use warnings;
+
+sub deal_one{
+	# my $deal = pop(@_[0]);
+	# push(@_[1],$deal);
+	(my $deal_from, my $deal_to) = @_;
+	my $deal = pop(@$deal_from);
+	push(@$deal_to,$deal);
+
+	return;
+}
 # print the player hand
 sub print_player_deck{
-	@player_deck = @_;
-	$size = @player_deck;
-	$player_hand = "Player's Current Hand:";
+	my @player_deck = @_;
+	my $size = @player_deck;
+	my $player_hand = "Player's Current Hand:";
+	my @possible_values = (0);
+	my $possible_size = 0;
 
-	@possible_values = (0);
-	for($i = 0; $i < $size; $i++){
+	for(my $i = 0; $i < $size; $i++){
 		$player_hand = $player_hand." ";
 		$player_hand = $player_hand.$player_deck[$i];
 		$possible_size = @possible_values;
 		if($player_deck[$i] eq 'A'){
-			for($j = 0; $j < $possible_size; $j++){
-				$temp = $possible_values[$j];
+			for(my $j = 0; $j < $possible_size; $j++){
+				my $temp = $possible_values[$j];
 
 				# Checking if new value needs to be created if A is used as 11
-				$if_newvalue = 1;
-				for($k = 0; $k < $possible_values; $k++){
+				my $if_newvalue = 1;
+				for(my $k = 0; $k < $possible_size; $k++){
 					if($possible_values[$j] + 11 == $possible_values[$k]){
+
 						$if_newvalue = 0;
 					}
 				}
 
 				#if if_newvalue is 1, we have to push the new value to the possible values array
 				if($if_newvalue == 1){
-					$value_topush = $temp + 11;
+					my $value_topush = $temp + 11;
 					push(@possible_values, $value_topush);
 				}
 
@@ -34,22 +46,30 @@ sub print_player_deck{
 			}
 		}
 		else{
-			for($l = 0; $l < $possible_size; $l++){
+			for(my $l = 0; $l < $possible_size; $l++){
 				$possible_values[$l] = $possible_values[$l] + $face_value_of{$player_deck[$i]};
 			}
 		}
 
 	}
-	$possible_size_after = @possible_values;
-	$possible_value_string = "";
+
+
+	my $possible_value_string = "";
+	# print ("possible_values before is: @possible_values\n");
+	$possible_size = @possible_values;
 	# Filter out the possible values that are over 21
-	for($i = 0; $i < $possible_size_after; $i++){
+	for(my $i = 0; $i < $possible_size; $i++){
 		if($possible_values[$i] > 21){
-			@possible_values = splice(@possible_values,$i);
+			splice(@possible_values,$i);
+
 		}
 	}
+	# print ("possible_values after is: @possible_values\n");
+	my $possible_size_after = @possible_values;
 	# Form the string inside of the parentheses
-	for ($i = 0; $i < $possible_size_after; $i++){
+
+	# print ("possible_size_after is : $possible_size_after\n");
+	for (my $i = 0; $i < $possible_size_after; $i++){
 		if($i == 0){
 			$possible_value_string = $possible_value_string."$possible_values[$i]";
 		}
@@ -63,11 +83,11 @@ sub print_player_deck{
 }
 # print the dealer hand
 sub print_dealer_deck{
-	@dealer_deck = @_;
-	$size = @dealer_deck;
-	$dealer_hand = "Dealer's Current Hand:";
-	@possible_values = (0);
-	for($i = 0; $i < $size; $i++){
+	my @dealer_deck = @_;
+	my $size = @dealer_deck;
+	my $dealer_hand = "Dealer's Current Hand:";
+	my @possible_values = (0);
+	for(my $i = 0; $i < $size; $i++){
 		if($i == 0){
 			$dealer_hand = $dealer_hand." ";
 			$dealer_hand = $dealer_hand.$dealer_deck[0];
@@ -75,14 +95,14 @@ sub print_dealer_deck{
 		else{
 			$dealer_hand = $dealer_hand." ?";
 		}
-		$possible_size = @possible_values;
+		my $possible_size = @possible_values;
 		if($dealer_deck[$i] eq 'A'){
-			for($j = 0; $j < $possible_size; $j++){
-				$temp = $possible_values[$j];
+			for(my $j = 0; $j < $possible_size; $j++){
+				my $temp = $possible_values[$j];
 
 				# Checking if new value needs to be created if A is used as 11
-				$if_newvalue = 1;
-				for($k = 0; $k < $possible_size; $k++){
+				my $if_newvalue = 1;
+				for(my $k = 0; $k < $possible_size; $k++){
 					if($possible_values[$j] + 11 == $possible_values[$k]){
 						$if_newvalue = 0;
 					}
@@ -90,7 +110,7 @@ sub print_dealer_deck{
 
 				#if if_newvalue is 1, we have to push the new value to the possible values array
 				if($if_newvalue == 1){
-					$value_topush = $temp + 11;
+					my $value_topush = $temp + 11;
 					push(@possible_values, $value_topush);
 				}
 
@@ -100,25 +120,24 @@ sub print_dealer_deck{
 		}
 		else{
 
-			for($l = 0; $l < $possible_size; $l++){
-
+			for(my $l = 0; $l < $possible_size; $l++){
 				$possible_values[$l] = $possible_values[$l] + $face_value_of{$dealer_deck[$i]};
 			}
 		}
 
 	}
-	$possible_size_after = @possible_values;
-	$possible_value_string = "";
 
+	my $possible_value_string = "";
+	$possible_size = @possible_values;
 	# Filter out the possible values that are over 21
-	for($i = 0; $i < $possible_size_after; $i++){
+	for(my $i = 0; $i < $possible_size; $i++){
 		if($possible_values[$i] > 21){
-			@possible_values = splice(@possible_values,$i);
+			splice(@possible_values,$i);
 		}
 	}
-
+	my $possible_size_after = @possible_values;
 	# Form the string that will be inside of the parentheses
-	for ($i = 0; $i < $possible_size_after; $i++){
+	for (my $i = 0; $i < $possible_size_after; $i++){
 		if($i == 0){
 			$possible_value_string = $possible_value_string."$possible_values[$i]";
 		}
@@ -127,19 +146,19 @@ sub print_dealer_deck{
 		}
 	}
 
-
-
 	print "$dealer_hand ($possible_value_string)\n";
 
 }
 # create a deck
 sub create_deck {
-	for ($i=0; $i < 4; $i++) {
-  	for($j=2; $j <= 10; $j++){
+	my @deck = ();
+	my $index = 0;
+	for (my $i=0; $i < 4; $i++) {
+  	for(my $j=2; $j <= 10; $j++){
     	$deck[$index] = $j;
     	$index ++;
   	}
-    for($k=11; $k<=13; $k++){
+    for(my $k=11; $k<=13; $k++){
 
     	if($k == 11){
       	$deck[$index] = "J";
@@ -161,36 +180,36 @@ sub create_deck {
 }
 # shuffle a deck
 sub shuffle_deck{
-  @deck = @_;
-  $size = @deck;
+  my @deck = @_;
+  my $size = @deck;
   print "the size is: $size\n";
-  for ($i= $size;$i>=0;$i--){
-  	$j = rand($i);
-  	$temp = $deck[$i];
+  for (my $i= $size;$i>=0;$i--){
+  	my $j = rand($i);
+  	my $temp = $deck[$i];
   	$deck[$i] = $deck[$j];
   	$deck[$j] = $temp;
 	}
   return @deck;
 }
-@time = localtime();
-$time_string = localtime();
+my @time = localtime();
+my $time_string = localtime();
 
-$balance =$time[3] * 10 + $time[1];
+my $balance =$time[3] * 10 + $time[1];
 print "starting balance is $balance\n";
 
-$line_credit = $time[0];
+my $line_credit = $time[0];
 print "the line of credit is $line_credit\n";
 print "The current time is: $time_string\n";
 
 
 print "Now seed for the game: ";
-$seed = <STDIN>;
+my $seed = <STDIN>;
 chomp $seed;
 exit 0 if ($seed eq "");
 print "the random seed is $seed\n";
 
 srand($seed);
-$index = 0;
+
 # create the hash table
 %face_value_of = (
     "1"  => 1,
@@ -209,29 +228,29 @@ $index = 0;
 );
 
 # create the deck
-@deck = create_deck;
+my @deck = create_deck;
 
 
 # shuffle the deck
-@shuffled_deck = ();
-@player_deck = ();
-@dealer_deck = ();
-$round = 0;
-$quit = 0;
+my @shuffled_deck = ();
+my @player_deck = ();
+my @dealer_deck = ();
+my $round = 0;
+my $quit = 0;
 while($quit != 1){
-	$hit_or_stay = 0;
+	my $hit_or_stay = 0;
 	if($round == 0){
 		$round = 1;
 		@shuffled_deck = shuffle_deck(@deck);
 
 		print("Hi there, welcome to the game of black jack!! The game where you think you would walk out of here hands full. But I assure you, you won't. Now time to waste both your money and your time.Whoo hoo!!!\n\n");
 		print("But first of all, how much would like to lose?: ");
-		$bet_amount = <STDIN>;
+		my $bet_amount = <STDIN>;
 		if ($bet_amount <= 0){
 			print ("Nice try.");
 			last;
 		}
-		$bet_amount_rounded = int($bet_amount + 0.5);
+		my $bet_amount_rounded = int($bet_amount + 0.5);
 
 		if ($bet_amount_rounded > $balance + $line_credit){
 			print ("Sorry bro, you are broke.\n");
@@ -248,13 +267,13 @@ while($quit != 1){
 
 
 		# Dealering two cards to the player
-		$dealer_deal = pop(@shuffled_deck);
+		my $dealer_deal = pop(@shuffled_deck);
 		push(@dealer_deck,$dealer_deal);
 		$dealer_deal = pop(@shuffled_deck);
 		push(@dealer_deck,$dealer_deal);
 
 		# Dealing two cards to the player
-		$player_deal = pop(@shuffled_deck);
+		my $player_deal = pop(@shuffled_deck);
 		push(@player_deck,$player_deal);
 		$player_deal = pop(@shuffled_deck);
 		push(@player_deck,$player_deal);
@@ -270,17 +289,32 @@ while($quit != 1){
 	}
 	else{
 		print("Hit or Stay?(H/S): ");
-		$input = <STDIN>;
+		# Removes any trailing string that corresponds to the current value of $/
+		# (also known as $INPUT_RECORD_SEPARATOR in the English module).
+		chomp(my $input = <STDIN>);
+		print "the input is $input\n";
 		if($input eq 'H' || $input eq 'h'){
 			$hit_or_stay = 0;
+			print "been here\n";
 		}
 		elsif($input eq 'S' || $input eq 's'){
 			$hit_or_stay = 1;
 		}
+		else{
+			print "Sorry, I cannot understand what you said.\n";
+			next;
+		}
 		if($hit_or_stay == 0){
+			print "Player_deck before: @player_deck\n";
+			deal_one(\@shuffled_deck,\@player_deck);
+			print "Player_deck after: @player_deck\n";
+			print_dealer_deck(@dealer_deck);
+			print_player_deck(@player_deck);
+		}
+		else{
 
 		}
-
+		print "something\n";
 
 
 	}
