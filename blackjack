@@ -5,7 +5,16 @@ sub deal_one{
 	# my $deal = pop(@_[0]);
 	# push(@_[1],$deal);
 	(my $deal_from, my $deal_to) = @_;
+	$deal_from_size = @$deal_from;
+
 	my $deal = pop(@$deal_from);
+
+	# print ("size of deal_from is: $deal_from_size\n");
+	# print ("deal_from_deck is:@$deal_from");
+	# if($deal == undef){
+	# 	print "\n!!!!!!!!!!!!!!!\n";
+	# }
+	# print ("the card dealt is:$deal\n");
 	push(@$deal_to,$deal);
 
 	return;
@@ -17,8 +26,13 @@ sub print_player_deck{
 	my $player_hand = "Player's Current Hand:";
 	my @possible_values = (0);
 	my $possible_size = 0;
-
+	print ("The player_deck size is: $size\n\n");
+	# print ("The player_deck is:@player_deck[16]\n");
+	if($size == 17 && $player_deck[16] == undef){
+		print "oh nooooo\n";
+	}
 	for(my $i = 0; $i < $size; $i++){
+		print ("i is : $i\n");
 		$player_hand = $player_hand." ";
 		$player_hand = $player_hand.$player_deck[$i];
 		$possible_size = @possible_values;
@@ -29,8 +43,7 @@ sub print_player_deck{
 				# Checking if new value needs to be created if A is used as 11
 				my $if_newvalue = 1;
 				for(my $k = 0; $k < $possible_size; $k++){
-					if($possible_values[$j] + 11 == $possible_values[$k]){
-
+					if($possible_values[$j] + 11 == $possible_values[$k] || $possible_values[$j] + 11 > 21){
 						$if_newvalue = 0;
 					}
 				}
@@ -56,18 +69,38 @@ sub print_player_deck{
 
 	my $possible_value_string = "";
 	# print ("possible_values before is: @possible_values\n");
-	$possible_size = @possible_values;
+
 	# Filter out the possible values that are over 21
-	for(my $i = 0; $i < $possible_size; $i++){
-		if($possible_values[$i] > 21){
-			splice(@possible_values,$i);
+	print ("now the possible_size is:$possible_size\n");
+	print ("now the possible_values are: @possible_values\n");
+	# my $i = 0;
+	# for($i; $i < $possible_size; $i++){
+	# 	print "value that is being looked at:$possible_values[$i] at index:$i\n";
+	# 	if($possible_values[$i] > 21){
+	#
+	# 		splice(@possible_values,$i);
+	# 		$possible_size = $possible_size - 1;
+	# 		$i = $i - 1;
+
+	# 	}
+	# }
+	$possible_size = @possible_values;
+	my $index = 0;
+	while($index < $possible_size){
+		if($possible_values[$index] > 21){
+			splice(@possible_values,$index);
 
 		}
+		else{
+			$index ++;
+		}
+		$possible_size = @possible_values;
 	}
 	# print ("possible_values after is: @possible_values\n");
 	my $possible_size_after = @possible_values;
 	# Form the string inside of the parentheses
-
+	print ("now the possible_values are after: @possible_values\n");
+	print ("now the possible_size is after:$possible_size_after\n");
 	# print ("possible_size_after is : $possible_size_after\n");
 	for (my $i = 0; $i < $possible_size_after; $i++){
 		if($i == 0){
@@ -87,6 +120,7 @@ sub print_dealer_deck{
 	my $size = @dealer_deck;
 	my $dealer_hand = "Dealer's Current Hand:";
 	my @possible_values = (0);
+	my $possible_size = 0;
 	for(my $i = 0; $i < $size; $i++){
 		if($i == 0){
 			$dealer_hand = $dealer_hand." ";
@@ -128,12 +162,18 @@ sub print_dealer_deck{
 	}
 
 	my $possible_value_string = "";
-	$possible_size = @possible_values;
 	# Filter out the possible values that are over 21
-	for(my $i = 0; $i < $possible_size; $i++){
-		if($possible_values[$i] > 21){
-			splice(@possible_values,$i);
+	$possible_size = @possible_values;
+	my $index = 0;
+	while($index < $possible_size){
+		if($possible_values[$index] > 21){
+			splice(@possible_values,$index);
+
 		}
+		else{
+			$index ++;
+		}
+		$possible_size = @possible_values;
 	}
 	my $possible_size_after = @possible_values;
 	# Form the string that will be inside of the parentheses
@@ -183,9 +223,12 @@ sub shuffle_deck{
   my @deck = @_;
   my $size = @deck;
   print "the size is: $size\n";
-  for (my $i= $size;$i>=0;$i--){
-  	my $j = rand($i);
+  for (my $i= $size - 1;$i>=0;$i--){
+  	my $j = int(rand($i + 1));
   	my $temp = $deck[$i];
+		# if(not defined($temp)){
+		# 	print ("!!!!!!!!! !!!!!! this is the reason why and i is :$i !!!!!!!!\n");
+		# }
   	$deck[$i] = $deck[$j];
   	$deck[$j] = $temp;
 	}
@@ -229,6 +272,11 @@ srand($seed);
 
 # create the deck
 my @deck = create_deck;
+# for(my $i = 0; $i <52; $i++ ){
+# 	if(not defined($deck[$i])){
+# 		print ("!!!!!!!!!!!!hell no at index: $i\n");
+# 	}
+# }
 
 
 # shuffle the deck
@@ -237,12 +285,18 @@ my @player_deck = ();
 my @dealer_deck = ();
 my $round = 0;
 my $quit = 0;
+
+
 while($quit != 1){
 	my $hit_or_stay = 0;
 	if($round == 0){
 		$round = 1;
 		@shuffled_deck = shuffle_deck(@deck);
-
+		for(my $i = 0; $i <52; $i++ ){
+			if(not defined($shuffled_deck[$i])){
+				print ("hell no at index: $i\n");
+			}
+		}
 		print("Hi there, welcome to the game of black jack!! The game where you think you would walk out of here hands full. But I assure you, you won't. Now time to waste both your money and your time.Whoo hoo!!!\n\n");
 		print("But first of all, how much would like to lose?: ");
 		my $bet_amount = <STDIN>;
@@ -267,19 +321,36 @@ while($quit != 1){
 
 
 		# Dealering two cards to the player
-		my $dealer_deal = pop(@shuffled_deck);
-		push(@dealer_deck,$dealer_deal);
-		$dealer_deal = pop(@shuffled_deck);
-		push(@dealer_deck,$dealer_deal);
-
+		# my $dealer_deal = pop(@shuffled_deck);
+		# push(@dealer_deck,$dealer_deal);
+		# $dealer_deal = pop(@shuffled_deck);
+		# push(@dealer_deck,$dealer_deal);
+		$deck_size0 = @shuffled_deck;
+		print ("Card deck size 0: $deck_size0\n");
+		for(my $i = 0; $i < 2; $i++){
+			deal_one(\@shuffled_deck,\@dealer_deck);
+		}
+		$deck_size1 = @shuffled_deck;
+		print ("Card deck size 1: $deck_size1\n");
 		# Dealing two cards to the player
-		my $player_deal = pop(@shuffled_deck);
-		push(@player_deck,$player_deal);
-		$player_deal = pop(@shuffled_deck);
-		push(@player_deck,$player_deal);
-
+		# my $player_deal = pop(@shuffled_deck);
+		# push(@player_deck,$player_deal);
+		# $player_deal = pop(@shuffled_deck);
+		# push(@player_deck,$player_deal);
+		for(my $i = 0; $i < 2; $i++){
+			deal_one(\@shuffled_deck,\@player_deck);
+		}
+		$deck_size2 = @shuffled_deck;
+		print ("Card deck size 2: $deck_size2\n");
 		print "right now the player deck is: @player_deck\n";
 		print "right now the dealer deck is: @dealer_deck\n";
+
+		# $player_deck_size = @player_deck;
+		# for(my $i = 0; $i < $player_deck_size; $i++ ){
+		# 	if($player_deck[$i] == undef){
+		# 		print ("Hell nooooo at $i");
+		# 	}
+		# }
 		# printing the current hands of both the dealer and the player
 		print_dealer_deck(@dealer_deck);
 		print_player_deck(@player_deck);
@@ -305,9 +376,16 @@ while($quit != 1){
 			next;
 		}
 		if($hit_or_stay == 0){
-			print "Player_deck before: @player_deck\n";
+			# print "Player_deck before: @player_deck\n";
+
+			$total_deck_size = @shuffled_deck;
+
+			print "right now the player deck is: @player_deck\n";
+			print "right now the total deck size is: $total_deck_size\n";
 			deal_one(\@shuffled_deck,\@player_deck);
-			print "Player_deck after: @player_deck\n";
+
+
+			# print "Player_deck after: @player_deck\n";
 			print_dealer_deck(@dealer_deck);
 			print_player_deck(@player_deck);
 		}
