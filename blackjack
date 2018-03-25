@@ -290,6 +290,7 @@ srand($seed);
 		"J" => 10,
 		"Q" => 10,
 		"K" => 10,
+		"A" => 11,
 );
 
 # create the deck
@@ -317,6 +318,7 @@ my @player_possible_values = ();
 my @player_deck = ();
 my @dealer_deck = ();
 my @shuffled_deck = &shuffle_deck(@deck);
+
 while($quit != 1){
 	my $round_done = 0;
 	my $hit_or_stay = 0;
@@ -366,6 +368,7 @@ while($quit != 1){
 		my $player_deal_one	= &deal_one(\@shuffled_deck,\@player_deck);
 		my $player_deal_two	= &deal_one(\@shuffled_deck,\@player_deck);
 
+
 		my $dealer_initial = $face_value_of{$dealer_deal_one} + $face_value_of{$dealer_deal_two};
 		my $player_initial = $face_value_of{$player_deal_one} + $face_value_of{$player_deal_two};
 		print "Dealer's two deals are $dealer_deal_one and $dealer_deal_two\n";
@@ -409,7 +412,7 @@ while($quit != 1){
 
 		if($input eq 'H' || $input eq 'h'){
 			$hit_or_stay = 0;
-			print "been here\n";
+
 		}
 		elsif($input eq 'S' || $input eq 's'){
 			$hit_or_stay = 1;
@@ -422,12 +425,13 @@ while($quit != 1){
 			# $total_deck_size = @shuffled_deck;
 			# print "right now the player deck is: @player_deck\n";
 			# print "right now the total deck size is: $total_deck_size\n";
+			&print_dealer_deck(1,\$if_ace,@dealer_deck);
 			&deal_one(\@shuffled_deck,\@player_deck);
 			@player_possible_values = &print_player_deck(@player_deck);
 			$player_possible_count = @player_possible_values;
 			# my $dealer_possible_count = print_dealer_deck(3,\$if_ace,@dealer_deck);
 
-			&print_dealer_deck(1,\$if_ace,@dealer_deck);
+
 
 			# If there is no possible value under 21, player immediately loses
 			if ($player_possible_count == 0){
@@ -461,12 +465,31 @@ while($quit != 1){
 							last;
 						}
 					}
+					if($if_stick == 0){
+
+						print("...Maybe I can draw one more card..\n");
+						my $deal = &deal_one(\@shuffled_deck, \@dealer_deck);
+						print("...I picked $deal.\n");
+						@dealer_possible_values = &print_dealer_deck(0,\$if_ace,@dealer_deck);
+						$dealer_possible_count = @dealer_possible_values;
+						if($dealer_possible_count == 0){
+							$if_stick = 1;
+							print("I busted, you won.\n");
+							$total_balance = $total_balance + $bet_amount_rounded;
+							print("Your new total balance is: $total_balance.\n\n");
+							$round = 0;
+							$round_done = 1;
+						}
+					}
+					else{
+						print "...I'll stick.\n";
+					}
 
 
 				}
 
 				else{
-
+					print "been here";
 					if($dealer_possible_values[0] < 17){
 						&print_dealer_deck(0,\$if_ace,@dealer_deck);
 						print("...Now, I am gonna draw one card..\n");
@@ -497,7 +520,7 @@ while($quit != 1){
 
 
 
-		if($round_done == 0){
+		if($round_done == 0 && $hit_or_stay == 1){
 			my $player_max_possible = max @player_possible_values;
 			my $dealer_max_possible = max @dealer_possible_values;
 
