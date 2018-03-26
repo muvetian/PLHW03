@@ -2,6 +2,8 @@
 use warnings;
 use List::Util qw( min max );
 use Time::Piece;
+use POSIX;
+
 sub reset_deck{
 	my $round = shift;
 	my $round_done = shift;
@@ -38,11 +40,8 @@ sub print_player_deck{
 	my $player_hand = "Player's Current Hand:";
 	my @possible_values = (0);
 	my $possible_size = 0;
-	# print ("The player_deck size is: $size\n\n");
-	# print ("The player_deck is:@player_deck[16]\n");
-	if($size == 17 && $player_deck[16] == undef){
-		print "oh nooooo\n";
-	}
+
+
 	for(my $i = 0; $i < $size; $i++){
 
 		$player_hand = $player_hand." ";
@@ -56,9 +55,10 @@ sub print_player_deck{
 				# Checking if new value needs to be created if A is used as 11
 				my $if_newvalue = 1;
 				for(my $k = 0; $k < $possible_size; $k++){
-					if($possible_values[$j] + 11 == $possible_values[$k] || $possible_values[$j] + 11 > 21){
-						$if_newvalue = 0;
-					}
+					$if_newvalue = 0 if($possible_values[$j] + 11 == $possible_values[$k] || $possible_values[$j] + 11 > 21);
+					# if($possible_values[$j] + 11 == $possible_values[$k] || $possible_values[$j] + 11 > 21){
+					# 	$if_newvalue = 0;
+					# }
 				}
 
 				#if if_newvalue is 1, we have to push the new value to the possible values array
@@ -68,7 +68,7 @@ sub print_player_deck{
 				}
 
 				# The default value is 1 for A
-				@possible_values[$j] = $temp + 1;
+				$possible_values[$j] = $temp + 1;
 			}
 		}
 		else{
@@ -81,7 +81,7 @@ sub print_player_deck{
 
 
 	my $possible_value_string = "";
-	# print ("possible_values before is: @possible_values\n");
+
 
 	# Filter out the possible values that are over 21
 
@@ -170,7 +170,7 @@ sub print_dealer_deck{
 				}
 
 				# The default value is 1 for A
-				@possible_values[$j] = $temp + 1;
+				$possible_values[$j] = $temp + 1;
 			}
 		}
 		else{
@@ -206,16 +206,12 @@ sub print_dealer_deck{
 		}
 	}
 	if($print_option == 0){
-
 		print "$dealer_hand ($possible_value_string)\n";
 	}
 	elsif($print_option == 1){
-
 		print "$dealer_hand\n";
 	}
-	else{
 
-	}
 
 
 	return @possible_values;
@@ -263,44 +259,28 @@ sub shuffle_deck{
 	}
   return @deck;
 }
-print "----------------\n";
+
 open DATA, "date |"   or die "Couldn't execute program: $!";
 $line = <DATA>;
-# while ( defined( my $line = <DATA> )  ) {
-#      chomp($line);
-#      print "$line\n";
-# }
 close DATA;
-
+$timezone = strftime("%Z", localtime());
 my $parsed_time = Time::Piece->strptime(
       $line,
-      "%a %b %d %H:%M:%S EDT %Y\n");
-my $second = $parsed_time->sec();
+      "%a %b %d %H:%M:%S $timezone %Y\n");
 
-print "The Current Time is: $second\n";
-# my $parser = DateTime::Format::Strptime->new(
-#   pattern => '%B %d, %Y %I:%M %p %Z',
-#   on_error => 'croak',
-# );
+print "The current time is: $parsed_time\n";
+my $balance =$parsed_time->mday() * 10 + $parsed_time->min();
+print "Starting balance is $balance\n";
 
-print "the second is: $line \n";
-print "----------------\n";
+my $line_credit = $parsed_time->sec();
+print "Line of credit is $line_credit\n";
 
-
-
-my @time = localtime();
-my $time_string = localtime();
-
-my $balance =$time[3] * 10 + $time[1];
-print "starting balance is $balance\n";
-
-my $line_credit = $time[0];
-print "the line of credit is $line_credit\n";
-print "The current time is: $time_string\n";
 
 my $total_balance = $balance + $line_credit;
+
 print "The total_balance is: $total_balance\n";
 print "Now seed for the game: ";
+
 my $seed = <STDIN>;
 chomp($seed);
 exit 0 if ($seed eq "");
@@ -352,14 +332,19 @@ my $if_dd = 0;
 while($quit != 1){
 	my $round_done = 0;
 	my $hit_or_stay = 0;
-
+	if($total_balance == 0){
+		$quit = 1;
+		print "You are completely broke, quitting now..\n";
+		last;
+	}
 	if($round == 0){
 		$round = 1;
 		my $deck_size = @shuffled_deck;
 
 		if($start == 1){
 			$start = 0;
-			print("Hi there, my name is Assistant robot Kevin. I am designed to have a lot of personalities not to be nice. By the way, welcome to the game of black jack!! The game where you think you would walk out of here hands full. But I assure you, you won't. Now time to waste both your money and your time.Whoo hoo!!!\n\n");
+			print("Hi there, my name is Assistant robot Kevin. I am designed to have a lot of personalities not to be nice.By the way, welcome to the game of black jack!! The game where you think you would walk out of here hands full.But I assure you, you won't. Now time to waste both your money and your time.Whoo hoo!!!\n");
+
 			print("But first of all, how much would like to lose?: ");
 		}
 		else{
@@ -369,13 +354,16 @@ while($quit != 1){
 		$bet_amount = <STDIN>;
 		if ($bet_amount <= 0){
 			print ("Nice try.");
-			last;
+			$round = 0;
+			next;
 		}
 		$bet_amount_rounded = int($bet_amount + 0.5);
 
 		if ($bet_amount_rounded > $total_balance){
-			print ("Sorry bro, you are broke.\n");
-			last;
+			print ("Sorry bro, that is more than what you have.\n");
+			$round = 0;
+			next;
+
 		}
 		if ($bet_amount_rounded >= 200){
 			print ("Going big huh? Just like they say go big or go home. Oh sorry, I just realize that you won't have a home after playing.\n");
@@ -396,34 +384,57 @@ while($quit != 1){
 		my $dealer_initial = $face_value_of{$dealer_deal_one} + $face_value_of{$dealer_deal_two};
 		my $player_initial = $face_value_of{$player_deal_one} + $face_value_of{$player_deal_two};
 
-
+		my $if_blackjack = 0;
 		if($dealer_initial == 21){
+			&print_dealer_deck(0,\$if_ace,@dealer_deck);
+			&print_player_deck(@player_deck);
 			print "I got a black jack!\n";
 			if($player_initial == 21){
 				print "You got lucky. I guess it's a tie.\n";
-				print("Your total balance is still: $total_balance.\n\n");
+				print("Your balance is still: $balance. And your line of credit is: $line_credit\n\n");
 				# This game is finished, reset the round number to 0
 				&reset_deck(\$round,\$round_done,\@player_deck,\@dealer_deck);
 			}
 			else{
 				print "and...you don't.\n";
 				$total_balance = $total_balance - $bet_amount_rounded;
-				print "$bet_amount_rounded perl bucks lost, $total_balance to go....\n\n";
+				$balance = $balance - $bet_amount_rounded;
+				if($balance < 0){
+					$line_credit = $line_credit + $balance;
+					$balance = 0;
+				}
+				if($line_credit < 0){
+					print "You are broke. Quitting now..";
+					last;
+				}
+
+				print "$bet_amount_rounded perl bucks lost. You balance is $balance, and your line of credit is $line_credit\n\n";
+				$if_blackjack = 1;
 				# This game is finished, reset the round number to 0
 				&reset_deck(\$round,\$round_done,\@player_deck,\@dealer_deck);
 
 			}
 		}
 		elsif($player_initial == 21){
-			print "OK...Congratz, very lucky.\n";
+
+			print "OK...Congratz, You got a blackjack. Very lucky.\n";
+			$if_blackjack = 1;
 			$total_balance = int($total_balance + 1.5 * $bet_amount_rounded);
-			print("Your new total balance is: $total_balance.\n");
+			$balance = int($balance + 1.5 * $bet_amount_rounded);
+			print("Your new balance is $balance, and your line of credit is $line_credit .\n");
 			# This game is finished, reset the round number to 0
 			&reset_deck(\$round,\$round_done,\@player_deck,\@dealer_deck);
+
 		}
 		# Printing the current hands of both the dealer and the player
-		@dealer_possible_values = &print_dealer_deck(1,\$if_ace,@dealer_deck);
-		@player_possible_values = &print_player_deck(@player_deck);
+		if($if_blackjack == 0){
+			@dealer_possible_values = &print_dealer_deck(1,\$if_ace,@dealer_deck);
+			@player_possible_values = &print_player_deck(@player_deck);
+		}
+		else{
+			$if_blackjack = 0;
+		}
+
 
 
 
@@ -431,8 +442,9 @@ while($quit != 1){
 	}
 	else{
 		my $input;
-		if($player_possible_values[0] == 9 ||$player_possible_values[0] == 10
-		|| $player_possible_values[0] == 11){
+		print ("The round value is : $round \n");
+		if(($player_possible_values[0] == 9 ||$player_possible_values[0] == 10
+		|| $player_possible_values[0] == 11) && $round == 1){
 			print("Hit or Stay or Double down?(H/S/D): ");
 			chomp($input = <STDIN>);
 			if($input eq 'H' || $input eq 'h'){
@@ -469,7 +481,7 @@ while($quit != 1){
 				next;
 			}
 		}
-
+		$round ++;
 		if($hit_or_stay == 0){
 			&print_dealer_deck(1,\$if_ace,@dealer_deck);
 			&deal_one(\@shuffled_deck,\@player_deck);
@@ -482,8 +494,18 @@ while($quit != 1){
 			# If there is no possible value under 21, player immediately loses
 			if ($player_possible_count == 0){
 				$total_balance = $total_balance - $bet_amount_rounded;
+				$balance = $balance - $bet_amount_rounded;
+				if($balance < 0){
+					$line_credit = $line_credit + $balance;
+					$balance = 0;
+				}
+				if($line_credit < 0){
+					print "You are broke. Quitting now..";
+					last;
+				}
+
 				print "*Failure sound effect* You are busted.\n";
-				print "$bet_amount_rounded perl bucks lost, $total_balance to go....\n\n";
+				print "$bet_amount_rounded perl bucks lost, your new balance is $total_balance, and your line of credit is $line_credit\n\n";
 				# This game is finished, reset the round number to 0
 				$round = 0;
 				$round_done = 1;
@@ -518,7 +540,8 @@ while($quit != 1){
 							$if_stick = 1;
 							print("I busted, you won.\n");
 							$total_balance = $total_balance + $bet_amount_rounded;
-							print("Your new total balance is: $total_balance.\n\n");
+							$balance = $balance + $player_possible_count;
+							print("Your new balance is $balance, and your line of credit is $line_credit.\n\n");
 							$round = 0;
 							$round_done = 1;
 						}
@@ -543,7 +566,8 @@ while($quit != 1){
 							$if_stick = 1;
 							print("I busted, you won.\n");
 							$total_balance = $total_balance + $bet_amount_rounded;
-							print("Your new total balance is: $total_balance.\n\n");
+							$balance = $balance + $bet_amount_rounded;
+							print("Your new balance is $balance, and your line of credit is $line_credit.\n\n");
 							$round = 0;
 							$round_done = 1;
 						}
@@ -571,9 +595,18 @@ while($quit != 1){
 			if ($player_possible_count == 0){
 				my $double_bet = 2 * $bet_amount_rounded;
 				$total_balance = $total_balance - $double_bet;
+				$balance = $balance - $double_bet;
+				if($balance < 0){
+					$line_credit = $line_credit + $balance;
+					$balance = 0;
+				}
+				if($line_credit < 0){
+					print "You are broke. Quitting now..";
+					last;
+				}
 
 				print "You are busted.\n";
-				print "$double_bet perl bucks lost, $total_balance to go....\n\n";
+				print "$double_bet perl bucks lost, your new balance is $balance, and your new line of credit is $line_credit .\n\n";
 				# This game is finished, reset the round number to 0
 				$round = 0;
 				$round_done = 1;
@@ -605,7 +638,8 @@ while($quit != 1){
 							$if_stick = 1;
 							print("I busted, you won.\n");
 							$total_balance = $total_balance + 2 * $bet_amount_rounded;
-							print("Your new total balance is: $total_balance.\n\n");
+							$balance = $balance + 2* $bet_amount_rounded;
+							print("Your new balance is $balance, and your line of credit is $line_credit.\n\n");
 							$round = 0;
 							$round_done = 1;
 						}
@@ -626,7 +660,8 @@ while($quit != 1){
 							$if_stick = 1;
 							print("I busted, you won.\n");
 							$total_balance = $total_balance + 2 * $bet_amount_rounded;
-							print("Your new total balance is: $total_balance.\n\n");
+							$balance = $balance + 2 * $bet_amount_rounded;
+							print("Your new balance is $balance, and your line of credit is $line_credit.\n\n");
 							$round = 0;
 							$round_done = 1;
 						}
@@ -657,7 +692,8 @@ while($quit != 1){
 
 				}
 				$total_balance = $total_balance + $bet_amount_rounded;
-				print("Your new total balance is: $total_balance.\n");
+				$balance = $balance + $bet_amount_rounded;
+				print("Your new balance is $total_balance, and your line of credit is $line_credit.\n");
 
 
 				&reset_deck(\$round,\$round_done,\@player_deck,\@dealer_deck);
@@ -670,17 +706,20 @@ while($quit != 1){
 				}
 
 				$total_balance = $total_balance - $bet_amount_rounded;
+				$balance = $balance - $bet_amount_rounded;
+				if($balance < 0){
+					$line_credit = $line_credit + $balance;
+					$balance = 0;
+				}
+				if($line_credit < 0){
+					print "You are broke. Quitting now..";
+					last;
+				}
+
 				print "You lost.\n";
-				print "$bet_amount_rounded perl bucks lost, $total_balance to go....\n";
+				print "$bet_amount_rounded perl bucks lost, now you have balance $balance, and line of credit $line_credit .\n";
 
 
-
-
-				# This game is finished, reset the round number to 0
-				# @player_deck = ();
-				# @dealer_deck = ();
-				# $round = 0;
-				# $round_done = 1;
 				&reset_deck(\$round,\$round_done,\@player_deck,\@dealer_deck);
 			}
 		}
