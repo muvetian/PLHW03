@@ -16,12 +16,17 @@ sub deal_one{
 	my $deal_from_size = @$deal_from;
 	my $deal = pop(@$deal_from);
 	push(@$deal_to,$deal);
-	if($deal_from_size < 11){
-		print "Less than 10 cards in the deck, I am gonna get us more cards and shuffle the deck.\n";
-		print "Hold on......\n";
-	}
+
 	# Check if the deal_from deck has less than 10 cards, if yes we need to create a new deck
-	if
+	if($deal_from_size < 10){
+		print "Less than 10 cards in the deck, I am gonna get us more cards and shuffle the deck.\n";
+		print("deck before: @$deal_from \n");
+		my @new_deck = &create_deck;
+		push(@$deal_from,@new_deck);
+		@$deal_from = &shuffle_deck(@$deal_from);
+		print "Done.\n";
+		print ("deck after: @$deal_from \n");
+	}
 
 	return $deal;
 }
@@ -297,11 +302,7 @@ srand($seed);
 
 # create the deck
 my @deck = create_deck;
-# for(my $i = 0; $i <52; $i++ ){
-# 	if(not defined($deck[$i])){
-# 		print ("!!!!!!!!!!!!hell no at index: $i\n");
-# 	}
-# }
+
 
 
 
@@ -329,13 +330,7 @@ while($quit != 1){
 	if($round == 0){
 		$round = 1;
 		my $deck_size = @shuffled_deck;
-		print ("!!!! Right now the deck size is: $deck_size\n");
-		# for(my $i = 0; $i <52; $i++ ){
-		# 	if(not defined($shuffled_deck[$i])){
-		# 		print ("hell no at index: $i\n");
-		# 	}
-		# }
-		# If this is the first time the player opens the game, show the welcoming message
+
 		if($start == 1){
 			$start = 0;
 			print("Hi there, my name is Assistant robot Kevin. I am designed to have a lot of personalities not to be nice. By the way, welcome to the game of black jack!! The game where you think you would walk out of here hands full. But I assure you, you won't. Now time to waste both your money and your time.Whoo hoo!!!\n\n");
@@ -633,14 +628,14 @@ while($quit != 1){
 				if($if_dd == 1){
 					$if_dd = 0;
 					$bet_amount_rounded = $bet_amount_rounded * 2;
-					print "been hererererererer!";
+
 				}
 				$total_balance = $total_balance + $bet_amount_rounded;
 				print("Your new total balance is: $total_balance.\n");
-				print ("Player deck before: @player_deck\n");
+
 
 				&reset_deck(\$round,\$round_done,\@player_deck,\@dealer_deck);
-				print ("Player deck after: @player_deck\n");
+
 			}
 			else{
 				if($if_dd == 1){
