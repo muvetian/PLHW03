@@ -3,7 +3,27 @@ use warnings;
 use List::Util qw( min max );
 use Time::Piece;
 use POSIX;
+sub check_player{
+	(my $player_possible_count, my $total_balance, my $balance, my $line_credit, my $round,my $round_done, my $bet_amount_rounded) = @_;
+	if ($$player_possible_count == 0){
+		$$total_balance = $$total_balance - $$bet_amount_rounded;
+		$$balance = $$balance - $$bet_amount_rounded;
+		if($$balance < 0){
+			$$line_credit = $$line_credit + $$balance;
+			$$balance = 0;
+		}
+		if($$line_credit < 0){
+			print "You are broke. Quitting now..";
+			last;
+		}
 
+		print "*Failure sound effect* You are busted.\n";
+		print "$$bet_amount_rounded perl bucks lost, your new balance is $$total_balance, and your line of credit is $$line_credit\n\n";
+		# This game is finished, reset the round number to 0
+		$$round = 0;
+		$$round_done = 1;
+	}
+}
 sub reset_deck{
 	my $round = shift;
 	my $round_done = shift;
@@ -43,7 +63,6 @@ sub print_player_deck{
 
 
 	for(my $i = 0; $i < $size; $i++){
-
 		$player_hand = $player_hand." ";
 		$player_hand = $player_hand.$player_deck[$i];
 		$possible_size = @possible_values;
@@ -56,9 +75,6 @@ sub print_player_deck{
 				my $if_newvalue = 1;
 				for(my $k = 0; $k < $possible_size; $k++){
 					$if_newvalue = 0 if($possible_values[$j] + 11 == $possible_values[$k] || $possible_values[$j] + 11 > 21);
-					# if($possible_values[$j] + 11 == $possible_values[$k] || $possible_values[$j] + 11 > 21){
-					# 	$if_newvalue = 0;
-					# }
 				}
 
 				#if if_newvalue is 1, we have to push the new value to the possible values array
@@ -216,6 +232,7 @@ sub print_dealer_deck{
 
 	return @possible_values;
 }
+
 # Create a deck
 sub create_deck {
 	my @deck = ();
@@ -290,7 +307,6 @@ srand($seed);
 
 # create the hash table
 %face_value_of = (
-    "1"  => 1,
     "2" => 2,
     "3"  => 3,
 		"4" => 4,
@@ -487,29 +503,27 @@ while($quit != 1){
 			&deal_one(\@shuffled_deck,\@player_deck);
 			@player_possible_values = &print_player_deck(@player_deck);
 			$player_possible_count = @player_possible_values;
-			# my $dealer_possible_count = print_dealer_deck(3,\$if_ace,@dealer_deck);
-
-
 
 			# If there is no possible value under 21, player immediately loses
-			if ($player_possible_count == 0){
-				$total_balance = $total_balance - $bet_amount_rounded;
-				$balance = $balance - $bet_amount_rounded;
-				if($balance < 0){
-					$line_credit = $line_credit + $balance;
-					$balance = 0;
-				}
-				if($line_credit < 0){
-					print "You are broke. Quitting now..";
-					last;
-				}
-
-				print "*Failure sound effect* You are busted.\n";
-				print "$bet_amount_rounded perl bucks lost, your new balance is $total_balance, and your line of credit is $line_credit\n\n";
-				# This game is finished, reset the round number to 0
-				$round = 0;
-				$round_done = 1;
-			}
+			check_player(\$player_possible_count,\$total_balance,\$balance,\$line_credit,\$round,\$round_done,\$bet_amount_rounded);
+			# if ($player_possible_count == 0){
+			# 	$total_balance = $total_balance - $bet_amount_rounded;
+			# 	$balance = $balance - $bet_amount_rounded;
+			# 	if($balance < 0){
+			# 		$line_credit = $line_credit + $balance;
+			# 		$balance = 0;
+			# 	}
+			# 	if($line_credit < 0){
+			# 		print "You are broke. Quitting now..";
+			# 		last;
+			# 	}
+			#
+			# 	print "*Failure sound effect* You are busted.\n";
+			# 	print "$bet_amount_rounded perl bucks lost, your new balance is $total_balance, and your line of credit is $line_credit\n\n";
+			# 	# This game is finished, reset the round number to 0
+			# 	$round = 0;
+			# 	$round_done = 1;
+			# }
 
 		}
 
