@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 use warnings;
 use List::Util qw( min max );
+use Time::Piece;
 sub reset_deck{
 	my $round = shift;
 	my $round_done = shift;
@@ -262,6 +263,31 @@ sub shuffle_deck{
 	}
   return @deck;
 }
+print "----------------\n";
+open DATA, "date |"   or die "Couldn't execute program: $!";
+$line = <DATA>;
+# while ( defined( my $line = <DATA> )  ) {
+#      chomp($line);
+#      print "$line\n";
+# }
+close DATA;
+
+my $parsed_time = Time::Piece->strptime(
+      $line,
+      "%a %b %d %H:%M:%S EDT %Y\n");
+my $second = $parsed_time->sec();
+
+print "The Current Time is: $second\n";
+# my $parser = DateTime::Format::Strptime->new(
+#   pattern => '%B %d, %Y %I:%M %p %Z',
+#   on_error => 'croak',
+# );
+
+print "the second is: $line \n";
+print "----------------\n";
+
+
+
 my @time = localtime();
 my $time_string = localtime();
 
