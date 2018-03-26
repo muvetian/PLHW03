@@ -13,12 +13,15 @@ sub reset_deck{
 }
 sub deal_one{
 	(my $deal_from, my $deal_to) = @_;
-	$deal_from_size = @$deal_from;
+	my $deal_from_size = @$deal_from;
 	my $deal = pop(@$deal_from);
 	push(@$deal_to,$deal);
-
+	if($deal_from_size < 11){
+		print "Less than 10 cards in the deck, I am gonna get us more cards and shuffle the deck.\n";
+		print "Hold on......\n";
+	}
 	# Check if the deal_from deck has less than 10 cards, if yes we need to create a new deck
-
+	if
 
 	return $deal;
 }
@@ -170,7 +173,6 @@ sub print_dealer_deck{
 				$possible_values[$l] = $possible_values[$l] + $face_value_of{$dealer_deck[$i]};
 			}
 		}
-
 	}
 
 	my $possible_value_string = "";
@@ -302,8 +304,8 @@ my @deck = create_deck;
 # }
 
 
-# shuffle the deck
-my @shuffled_deck = ();
+
+
 
 my $round = 0;
 my $quit = 0;
@@ -318,6 +320,7 @@ my @player_possible_values = ();
 my @player_deck = ();
 my @dealer_deck = ();
 my @shuffled_deck = &shuffle_deck(@deck);
+my $if_dd = 0;
 
 while($quit != 1){
 	my $round_done = 0;
@@ -368,11 +371,11 @@ while($quit != 1){
 		my $player_deal_one	= &deal_one(\@shuffled_deck,\@player_deck);
 		my $player_deal_two	= &deal_one(\@shuffled_deck,\@player_deck);
 
-
+		# Checking if the user should be given the double down
 		my $dealer_initial = $face_value_of{$dealer_deal_one} + $face_value_of{$dealer_deal_two};
 		my $player_initial = $face_value_of{$player_deal_one} + $face_value_of{$player_deal_two};
-		print "Dealer's two deals are $dealer_deal_one and $dealer_deal_two\n";
-		print "Initial values are $dealer_initial and $player_initial.\n";
+
+
 		if($dealer_initial == 21){
 			print "I got a black jack!\n";
 			if($player_initial == 21){
@@ -391,7 +394,7 @@ while($quit != 1){
 			}
 		}
 		elsif($player_initial == 21){
-			print "OK...Congratz, very lucky.\n"
+			print "OK...Congratz, very lucky.\n";
 			$total_balance = int($total_balance + 1.5 * $bet_amount_rounded);
 			print("Your new total balance is: $total_balance.\n");
 			# This game is finished, reset the round number to 0
@@ -406,26 +409,47 @@ while($quit != 1){
 
 	}
 	else{
-		print("Hit or Stay?(H/S): ");
-		# Removes any trailing string that corresponds to the current value of $/
-		# (also known as $INPUT_RECORD_SEPARATOR in the English module).
-		chomp(my $input = <STDIN>);
+		my $input;
+		if($player_possible_values[0] == 9 ||$player_possible_values[0] == 10
+		|| $player_possible_values[0] == 11){
+			print("Hit or Stay or Double down?(H/S/D): ");
+			chomp($input = <STDIN>);
+			if($input eq 'H' || $input eq 'h'){
+				$hit_or_stay = 0;
 
-		if($input eq 'H' || $input eq 'h'){
-			$hit_or_stay = 0;
-
-		}
-		elsif($input eq 'S' || $input eq 's'){
-			$hit_or_stay = 1;
+			}
+			elsif($input eq 'S' || $input eq 's'){
+				$hit_or_stay = 1;
+			}
+			elsif($input eq 'D' || $input eq 'd'){
+				$hit_or_stay = 2;
+				$if_dd = 1;
+			}
+			else{
+				print "Sorry, I cannot understand what you said.\n";
+				next;
+			}
 		}
 		else{
-			print "Sorry, I cannot understand what you said.\n";
-			next;
+			print("Hit or Stay?(H/S): ");
+			# Removes any trailing string that corresponds to the current value of $/
+			# (also known as $INPUT_RECORD_SEPARATOR in the English module).
+			chomp($input = <STDIN>);
+
+			if($input eq 'H' || $input eq 'h'){
+				$hit_or_stay = 0;
+
+			}
+			elsif($input eq 'S' || $input eq 's'){
+				$hit_or_stay = 1;
+			}
+			else{
+				print "Sorry, I cannot understand what you said.\n";
+				next;
+			}
 		}
+
 		if($hit_or_stay == 0){
-			# $total_deck_size = @shuffled_deck;
-			# print "right now the player deck is: @player_deck\n";
-			# print "right now the total deck size is: $total_deck_size\n";
 			&print_dealer_deck(1,\$if_ace,@dealer_deck);
 			&deal_one(\@shuffled_deck,\@player_deck);
 			@player_possible_values = &print_player_deck(@player_deck);
@@ -447,27 +471,23 @@ while($quit != 1){
 		}
 
 		# If the player decides to stay
-		else{
+		elsif($hit_or_stay == 1){
 			my $if_stick = 0;
+			print ("I am starting with: @dealer_deck.\n");
 			while($if_stick == 0){
 				$if_ace = 0;
-
 				@dealer_possible_values = &print_dealer_deck(-1,\$if_ace,@dealer_deck);
-
-
 				# If there exists an ace in the dealer's deck, we want to check if there
 				# is a possible value that is between 17 and 21
 				if($if_ace == 1){
-
 					for(my $i = 0; $i < $dealer_possible_count; $i ++){
 						if(16 < $dealer_possible_values[$i] && $dealer_possible_values[$i]< 22){
 							$if_stick = 1;
-
 							last;
 						}
 					}
-					if($if_stick == 0){
 
+					if($if_stick == 0){
 						print("...Maybe I can draw one more card..\n");
 						my $deal = &deal_one(\@shuffled_deck, \@dealer_deck);
 						print("...I picked $deal.\n");
@@ -483,14 +503,14 @@ while($quit != 1){
 						}
 					}
 					else{
-						print "...I'll stick.\n";
+						print "...I'll stick with cards @dealer_deck.\n";
 					}
 
 
 				}
 
 				else{
-					print "been here";
+
 					if($dealer_possible_values[0] < 17){
 						&print_dealer_deck(0,\$if_ace,@dealer_deck);
 						print("...Now, I am gonna draw one card..\n");
@@ -509,38 +529,132 @@ while($quit != 1){
 					}
 					else{
 						$if_stick = 1;
-						print "...I am going to stick.\n";
+						print "...I am going to stick with cards @dealer_deck.\n";
 					}
 				}
+
+
 			}
 
+
+		}
+		else{
+			print ("We are doing double down.\n");
+
+			# Deal one card to the player first because it is a double down
+			&deal_one(\@shuffled_deck,\@player_deck);
+			@player_possible_values = &print_player_deck(@player_deck);
+			$player_possible_count = @player_possible_values;
+
+			# If there is no possible value under 21, player immediately loses
+			if ($player_possible_count == 0){
+				my $double_bet = 2 * $bet_amount_rounded;
+				$total_balance = $total_balance - $double_bet;
+
+				print "You are busted.\n";
+				print "$double_bet perl bucks lost, $total_balance to go....\n\n";
+				# This game is finished, reset the round number to 0
+				$round = 0;
+				$round_done = 1;
+			}
+
+			my $if_stick = 0;
+			print ("I am starting with: @dealer_deck.\n");
+			while($if_stick == 0){
+				$if_ace = 0;
+				@dealer_possible_values = &print_dealer_deck(-1,\$if_ace,@dealer_deck);
+
+				# If there exists an ace in the dealer's deck, we want to check if there
+				# is a possible value that is between 17 and 21
+				if($if_ace == 1){
+					for(my $i = 0; $i < $dealer_possible_count; $i ++){
+						if(16 < $dealer_possible_values[$i] && $dealer_possible_values[$i]< 22){
+							$if_stick = 1;
+							last;
+						}
+					}
+
+					if($if_stick == 0){
+						print("...Maybe I can draw one more card..\n");
+						my $deal = &deal_one(\@shuffled_deck, \@dealer_deck);
+						print("...I picked $deal.\n");
+						@dealer_possible_values = &print_dealer_deck(0,\$if_ace,@dealer_deck);
+						$dealer_possible_count = @dealer_possible_values;
+						if($dealer_possible_count == 0){
+							$if_stick = 1;
+							print("I busted, you won.\n");
+							$total_balance = $total_balance + 2 * $bet_amount_rounded;
+							print("Your new total balance is: $total_balance.\n\n");
+							$round = 0;
+							$round_done = 1;
+						}
+					}
+					else{
+						print "...I'll stick with cards @dealer_deck.\n";
+					}
+				}
+				else{
+					if($dealer_possible_values[0] < 17){
+						&print_dealer_deck(0,\$if_ace,@dealer_deck);
+						print("...Now, I am gonna draw one card..\n");
+						my $deal = &deal_one(\@shuffled_deck, \@dealer_deck);
+						print("...I picked $deal.\n");
+						@dealer_possible_values = &print_dealer_deck(0,\$if_ace,@dealer_deck);
+						$dealer_possible_count = @dealer_possible_values;
+						if($dealer_possible_count == 0){
+							$if_stick = 1;
+							print("I busted, you won.\n");
+							$total_balance = $total_balance + 2 * $bet_amount_rounded;
+							print("Your new total balance is: $total_balance.\n\n");
+							$round = 0;
+							$round_done = 1;
+						}
+					}
+					else{
+						$if_stick = 1;
+						print "...I am going to stick with cards @dealer_deck.\n";
+					}
+				}
+
+
+			}
 
 		}
 
 
 
 
-
-		if($round_done == 0 && $hit_or_stay == 1){
+		if($round_done == 0 && ($hit_or_stay == 1 || $hit_or_stay == 2)){
 			my $player_max_possible = max @player_possible_values;
 			my $dealer_max_possible = max @dealer_possible_values;
 
 			if($player_max_possible > $dealer_max_possible || $player_max_possible == $dealer_max_possible){
 				print("You won.\n");
+				if($if_dd == 1){
+					$if_dd = 0;
+					$bet_amount_rounded = $bet_amount_rounded * 2;
+					print "been hererererererer!";
+				}
 				$total_balance = $total_balance + $bet_amount_rounded;
 				print("Your new total balance is: $total_balance.\n");
 				print ("Player deck before: @player_deck\n");
-				# @player_deck = ();
-				# @dealer_deck = ();
-				# $round = 0;
-				# $round_done = 1;
+
 				&reset_deck(\$round,\$round_done,\@player_deck,\@dealer_deck);
 				print ("Player deck after: @player_deck\n");
 			}
 			else{
+				if($if_dd == 1){
+					$if_dd = 0;
+					$bet_amount_rounded = $bet_amount_rounded * 2;
+				}
+
 				$total_balance = $total_balance - $bet_amount_rounded;
 				print "You lost.\n";
 				print "$bet_amount_rounded perl bucks lost, $total_balance to go....\n";
+
+
+
+
 				# This game is finished, reset the round number to 0
 				# @player_deck = ();
 				# @dealer_deck = ();
