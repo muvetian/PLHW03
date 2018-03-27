@@ -2,22 +2,20 @@
 use warnings;
 use List::Util qw( min max );
 use Time::Piece;
+use Scalar::Util qw(looks_like_number);
 use POSIX;
 sub dealer_stick{
+	(my $if_stick,my $if_ace,my $bet_amount_rounded, my $balance, my $total_balance, my $line_credit, my $round, my $round_done,my $dealer_possible_count,my $dealer_possible_values,my $shuffled_deck ,my $dealer_deck) = @_;
 
-	(my $if_stick,my $if_ace,my $bet_amount_rounded, my $balance, my $total_balance, my $line_credit, my $round, my $round_done,my $shuffled_deck ,my $dealer_deck) = @_;
-	my @dealer_possible_values = ();
-	my $dealer_possible_count = 0;
 	while($$if_stick == 0){
 		$$if_ace = 0;
-
-		my @dealer_possible_values = &print_dealer_deck(-1,$if_ace,@$dealer_deck);
-		$dealer_possible_count = @dealer_possible_values;
+		@$dealer_possible_values = &print_dealer_deck(-1,$if_ace,@$dealer_deck);
+		$$dealer_possible_count = @$dealer_possible_values;
 		# If there exists an ace in the dealer's deck, we want to check if there
 		# is a possible value that is between 17 and 21
 		if($$if_ace == 1){
-			for(my $i = 0; $i < $dealer_possible_count; $i ++){
-				if(16 < $dealer_possible_values[$i] && $dealer_possible_values[$i]< 22){
+			for(my $i = 0; $i < $$dealer_possible_count; $i ++){
+				if(16 < @$dealer_possible_values[$i] && @$dealer_possible_values[$i]< 22){
 					$$if_stick = 1;
 					last;
 				}
@@ -27,9 +25,9 @@ sub dealer_stick{
 				print("...Maybe I can draw one more card..\n");
 				my $deal = &deal_one($shuffled_deck, $dealer_deck);
 				print("...I picked $deal.\n");
-				@dealer_possible_values = &print_dealer_deck(0,$if_ace,@$dealer_deck);
-				$dealer_possible_count = @dealer_possible_values;
-				if($dealer_possible_count == 0){
+				@$dealer_possible_values = &print_dealer_deck(0,$if_ace,@$dealer_deck);
+				$$dealer_possible_count = @$dealer_possible_values;
+				if($$dealer_possible_count == 0){
 					$$if_stick = 1;
 					print("I busted, you won.\n");
 					$$total_balance = $$total_balance + $$bet_amount_rounded;
@@ -44,18 +42,18 @@ sub dealer_stick{
 			}
 		}
 		else{
-			if($dealer_possible_values[0] < 17){
-				&print_dealer_deck(0,$if_ace,@$dealer_deck);
+			if(@$dealer_possible_values[0] < 17){
+				# &print_dealer_deck(0,$if_ace,@$dealer_deck);
 				print("...Now, I am gonna draw one card..\n");
 				my $deal = &deal_one($shuffled_deck, $dealer_deck);
 				print("...I picked $deal.\n");
-				@dealer_possible_values = &print_dealer_deck(0,$if_ace,@$dealer_deck);
-				$dealer_possible_count = @dealer_possible_values;
-				if($dealer_possible_count == 0){
+				@$dealer_possible_values = &print_dealer_deck(0,$if_ace,@$dealer_deck);
+				$$dealer_possible_count = @$dealer_possible_values;
+				if($$dealer_possible_count == 0){
 					$$if_stick = 1;
 					print("I busted, you won.\n");
 					$$total_balance = $$total_balance + $$bet_amount_rounded;
-					$$balance = $balance + $$bet_amount_rounded;
+					$$balance = $$balance + $$bet_amount_rounded;
 					print("Your new balance is $$balance, and your line of credit is $$line_credit.\n\n");
 					$$round = 0;
 					$$round_done = 1;
@@ -80,8 +78,8 @@ sub check_player_bust{
 			$$line_credit = $$line_credit + $$balance;
 			$$balance = 0;
 		}
-		if($$line_credit < 0){
-			print "You are broke. Quitting now..";
+		if($$line_credit < 0 || $$line_credit == 0){
+			print "You are broke. Quitting now..\n";
 			last;
 		}
 
@@ -401,11 +399,7 @@ my $round_done = 0;
 while($quit != 1){
 
 	my $hit_or_stay = 0;
-	if($total_balance == 0){
-		$quit = 1;
-		print "You are completely broke, quitting now..\n";
-		last;
-	}
+
 	if($round == 0 && $round_done == 0){
 		$round = 1;
 		my $deck_size = @shuffled_deck;
@@ -419,11 +413,17 @@ while($quit != 1){
 		else{
 			print("Place bet again:");
 		}
-
-		$bet_amount = <STDIN>;
+		chomp($bet_amount = <STDIN>);
+		if(!looks_like_number($bet_amount)){
+			print ("Sorry I do not understand what you just entered.\n");
+			$round = 0;
+			$round_done = 0;
+			next;
+		}
 		if ($bet_amount <= 0){
 			print ("Nice try.");
 			$round = 0;
+			$round_done = 0;
 			next;
 		}
 		$bet_amount_rounded = int($bet_amount + 0.5);
@@ -431,6 +431,7 @@ while($quit != 1){
 		if ($bet_amount_rounded > $total_balance){
 			print ("Sorry bro, that is more than what you have.\n");
 			$round = 0;
+			$round_done = 0;
 			next;
 
 		}
@@ -471,8 +472,8 @@ while($quit != 1){
 					$line_credit = $line_credit + $balance;
 					$balance = 0;
 				}
-				if($line_credit < 0){
-					print "You are broke. Quitting now..";
+				if($line_credit < 0 || $line_credit == 0){
+					print "You are broke. Quitting now..\n";
 					last;
 				}
 
@@ -560,7 +561,7 @@ while($quit != 1){
 		elsif($hit_or_stay == 1){
 			my $if_stick = 0;
 			print ("I am starting with: @dealer_deck.\n");
-			&dealer_stick(\$if_stick,\$if_ace,\$bet_amount_rounded,\$balance,\$total_balance,\$line_credit,\$round,\$round_done,\@shuffled_deck,\@dealer_deck);
+			&dealer_stick(\$if_stick,\$if_ace,\$bet_amount_rounded,\$balance,\$total_balance,\$line_credit,\$round,\$round_done,\$dealer_possible_count,\@dealer_possible_values,\@shuffled_deck,\@dealer_deck);
 		}
 		else{
 			print ("We are doing double down.\n");
@@ -574,7 +575,7 @@ while($quit != 1){
 			check_player_bust(\$player_possible_count,\$total_balance,\$balance,\$line_credit,\$round,\$round_done,\$bet_amount_rounded);
 			my $if_stick = 0;
 			print ("I am starting with: @dealer_deck.\n");
-			&dealer_stick(\$if_stick,\$if_ace,\$bet_amount_rounded,\$balance,\$total_balance,\$line_credit,\$round,\$round_done,\@shuffled_deck,\@dealer_deck);
+			&dealer_stick(\$if_stick,\$if_ace,\$bet_amount_rounded,\$balance,\$total_balance,\$line_credit,\$round,\$round_done,\$dealer_possible_count,\@dealer_possible_values,\@shuffled_deck,\@dealer_deck);
 
 		}
 
@@ -608,14 +609,14 @@ while($quit != 1){
 					$line_credit = $line_credit + $balance;
 					$balance = 0;
 				}
-				if($line_credit < 0){
-					print "You are broke. Quitting now..";
-					last;
-				}
+
 
 				print "You lost.\n";
 				print "$bet_amount_rounded perl bucks lost, now you have balance $balance, and line of credit $line_credit .\n";
-
+				if($line_credit < 0 || $line_credit == 0){
+					print "You are broke. Quitting now..\n";
+					last;
+				}
 
 				&reset_deck(\$round,\$round_done,\@player_deck,\@dealer_deck);
 			}
